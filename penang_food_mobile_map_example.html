@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Penang Food Map</title>
+
+  <!-- Leaflet map library: no Google Maps API key needed for this demo -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    :root {
+      --panel-bg: #ffffff;
+      --text: #111111;
+      --muted: #666666;
+      --border: #dddddd;
+      --accent: #1a73e8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    body {
+      min-height: 100%;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: #f5f5f5;
+    }
+
+    .app {
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 12px 16px;
+      background: var(--panel-bg);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    header p {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    #map {
+      height: 52vh;
+      height: 52dvh;
+      min-height: 320px;
+      width: 100%;
+    }
+
+    .panel {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--panel-bg);
+      border-top: 1px solid var(--border);
+      padding: 12px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .filter-btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .filter-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .place-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .place-card h2 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .meta {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .actions a,
+    .actions button {
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 14px;
+      text-decoration: none;
+      background: #eef4ff;
+      color: var(--accent);
+      cursor: pointer;
+    }
+
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    @media (min-width: 760px) {
+      .app {
+        flex-direction: row;
+      }
+
+      #map {
+        height: 100vh;
+        height: 100dvh;
+        width: 60%;
+      }
+
+      .side {
+        width: 40%;
+        height: 100vh;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        border-left: 1px solid var(--border);
+      }
+
+      .panel {
+        border-left: 1px solid var(--border);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div id="map"></div>
+
+    <div class="side">
+      <header>
+        <h1>Penang Food Map</h1>
+        <p>Saved places + your current location</p>
+      </header>
+
+      <main class="panel">
+        <div id="locationStatus" class="status">
+          Asking for your location…
+        </div>
+
+        <div class="controls" id="filters"></div>
+
+        <div id="placeList"></div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const status = document.getElementById("locationStatus");
+
+    if (!window.L) {
+      status.textContent = "Map library could not load. Check your internet connection, then reload this page.";
+      throw new Error("Leaflet failed to load");
+    }
+
+    // Replace this sample data with your real list later.
+    // Best full format:
+    // name, type, lat, lng, openingHours, googleMapsUrl, notes
+    const places = [
+      {
+        name: "Penang Road Famous Teochew Chendul",
+        type: "Dessert",
+        lat: 5.41811,
+        lng: 100.33185,
+        openingHours: "Mon–Fri 10:30–19:00; Sat–Sun 10:00–19:30",
+        googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Penang%20Road%20Famous%20Teochew%20Chendul"
+      },
+      {
+        name: "Air Itam Laksa",
+        type: "Laksa",
+        lat: 5.40195,
+        lng: 100.27877,
+        openingHours: "Mon, Thu–Sun 10:30–19:00; Tue–Wed closed",
+        googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Air%20Itam%20Laksa"
+      },
+      {
+        name: "Tiger Char Koay Teow",
+        type: "Char Koay Teow",
+        lat: 5.41653,
+        lng: 100.32357,
+        openingHours: "Daily 08:00–14:30",
+        googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Tiger%20Char%20Koay%20Teow%20Penang"
+      },
+      {
+        name: "Toh Soon Cafe",
+        type: "Breakfast",
+        lat: 5.41875,
+        lng: 100.33214,
+        openingHours: "Mon–Sat 08:00–18:30; Sun closed",
+        googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Toh%20Soon%20Cafe%20Penang"
+      }
+    ];
+
+    const defaultCenter = [5.4141, 100.3288]; // George Town, Penang
+
+    const map = L.map("map", {
+      zoomControl: true
+    }).setView(defaultCenter, 13);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "© OpenStreetMap"
+    }).addTo(map);
+
+    const markers = [];
+    let activeType = "All";
+
+    const userIcon = L.divIcon({
+      className: "",
+      html: `
+        <div style="
+          width:18px;
+          height:18px;
+          background:#1a73e8;
+          border:3px solid white;
+          border-radius:50%;
+          box-shadow:0 0 0 3px rgba(26,115,232,.25);
+        "></div>
+      `,
+      iconSize: [18, 18],
+      iconAnchor: [9, 9]
+    });
+
+    const placeIcon = L.divIcon({
+      className: "",
+      html: `
+        <div style="
+          width:22px;
+          height:22px;
+          background:#d93025;
+          border:3px solid white;
+          border-radius:50% 50% 50% 0;
+          transform:rotate(-45deg);
+          box-shadow:0 2px 8px rgba(0,0,0,.3);
+        "></div>
+      `,
+      iconSize: [22, 22],
+      iconAnchor: [11, 22]
+    });
+
+    function renderMarkers() {
+      markers.forEach(marker => map.removeLayer(marker));
+      markers.length = 0;
+
+      const visiblePlaces = places.filter(place => {
+        return activeType === "All" || place.type === activeType;
+      });
+
+      visiblePlaces.forEach(place => {
+        const marker = L.marker([place.lat, place.lng], { icon: placeIcon })
+          .addTo(map)
+          .bindPopup(`
+            <strong>${place.name}</strong><br>
+            ${place.type}<br>
+            ${place.openingHours}<br>
+            <a href="${place.googleMapsUrl}" target="_blank" rel="noopener">Open in Google Maps</a>
+          `);
+
+        markers.push(marker);
+      });
+    }
+
+    function renderFilters() {
+      const filters = document.getElementById("filters");
+      const types = ["All", ...new Set(places.map(place => place.type))];
+
+      filters.innerHTML = types.map(type => `
+        <button
+          class="filter-btn ${type === activeType ? "active" : ""}"
+          onclick="setFilter('${type}')">
+          ${type}
+        </button>
+      `).join("");
+    }
+
+    function setFilter(type) {
+      activeType = type;
+      renderFilters();
+      renderMarkers();
+      renderList();
+    }
+
+    function focusPlace(index) {
+      const place = places[index];
+      map.setView([place.lat, place.lng], 17);
+      markers.forEach(marker => {
+        const markerLatLng = marker.getLatLng();
+        if (
+          Math.abs(markerLatLng.lat - place.lat) < 0.00001 &&
+          Math.abs(markerLatLng.lng - place.lng) < 0.00001
+        ) {
+          marker.openPopup();
+        }
+      });
+    }
+
+    function renderList() {
+      const list = document.getElementById("placeList");
+
+      const visiblePlaces = places
+        .map((place, index) => ({ ...place, originalIndex: index }))
+        .filter(place => activeType === "All" || place.type === activeType);
+
+      list.innerHTML = visiblePlaces.map(place => `
+        <section class="place-card">
+          <h2>${place.name}</h2>
+
+          <div class="meta">
+            Type: ${place.type}<br>
+            Opening: ${place.openingHours}
+          </div>
+
+          <div class="actions">
+            <button onclick="focusPlace(${place.originalIndex})">Show on map</button>
+            <a href="${place.googleMapsUrl}" target="_blank" rel="noopener">Open in Google Maps</a>
+          </div>
+        </section>
+      `).join("");
+    }
+
+    function locateUser() {
+      if (!navigator.geolocation) {
+        status.textContent = "Your browser does not support location.";
+        return;
+      }
+
+      if (!window.isSecureContext) {
+        status.textContent = "Location needs HTTPS on iPhone Safari. The saved places are still shown.";
+        map.setView(defaultCenter, 13);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          L.marker([lat, lng], { icon: userIcon })
+            .addTo(map)
+            .bindPopup("You are here");
+
+          status.textContent = "Your location is shown on the map.";
+
+          const group = L.featureGroup([
+            ...markers,
+            L.marker([lat, lng])
+          ]);
+
+          map.fitBounds(group.getBounds().pad(0.18));
+        },
+        error => {
+          status.textContent = "Location permission was denied or unavailable.";
+          map.setView(defaultCenter, 13);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    }
+
+    renderFilters();
+    renderMarkers();
+    renderList();
+    setTimeout(() => map.invalidateSize(), 250);
+    locateUser();
+  </script>
+</body>
+</html>
