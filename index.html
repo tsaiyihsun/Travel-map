@@ -258,6 +258,7 @@
 
     const markers = [];
     let activeType = "All";
+    let userLocation = null;
 
     const userIcon = L.divIcon({
       className: "",
@@ -334,6 +335,31 @@
       renderList();
     }
 
+    function getDistanceMeters(start, end) {
+      const earthRadiusMeters = 6371000;
+      const toRadians = degrees => degrees * Math.PI / 180;
+      const lat1 = toRadians(start.lat);
+      const lat2 = toRadians(end.lat);
+      const deltaLat = toRadians(end.lat - start.lat);
+      const deltaLng = toRadians(end.lng - start.lng);
+
+      const a =
+        Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+        Math.cos(lat1) * Math.cos(lat2) *
+        Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      return earthRadiusMeters * c;
+    }
+
+    function formatDistance(meters) {
+      if (meters < 1000) {
+        return `${Math.round(meters)} m away`;
+      }
+
+      return `${(meters / 1000).toFixed(1)} km away`;
+    }
+
     function focusPlace(index) {
       const place = places[index];
       map.setView([place.lat, place.lng], 17);
@@ -352,8 +378,21 @@
       const list = document.getElementById("placeList");
 
       const visiblePlaces = places
-        .map((place, index) => ({ ...place, originalIndex: index }))
-        .filter(place => activeType === "All" || place.type === activeType);
+        .map((place, index) => {
+          const distanceMeters = userLocation
+            ? getDistanceMeters(userLocation, { lat: place.lat, lng: place.lng })
+            : null;
+
+          return { ...place, originalIndex: index, distanceMeters };
+        })
+        .filter(place => activeType === "All" || place.type === activeType)
+        .sort((a, b) => {
+          if (a.distanceMeters === null || b.distanceMeters === null) {
+            return a.originalIndex - b.originalIndex;
+          }
+
+          return a.distanceMeters - b.distanceMeters;
+        });
 
       list.innerHTML = visiblePlaces.map(place => `
         <section class="place-card">
@@ -362,6 +401,7 @@
           <div class="meta">
             Type: ${place.type}<br>
             Opening: ${place.openingHours}
+            ${place.distanceMeters === null ? "" : `<br>Distance: ${formatDistance(place.distanceMeters)}`}
           </div>
 
           <div class="actions">
@@ -388,12 +428,14 @@
         position => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
+          userLocation = { lat, lng };
 
           L.marker([lat, lng], { icon: userIcon })
             .addTo(map)
             .bindPopup("You are here");
 
-          status.textContent = "Your location is shown on the map.";
+          status.textContent = "Sorted nearest to farthest from your location.";
+          renderList();
 
           const group = L.featureGroup([
             ...markers,
