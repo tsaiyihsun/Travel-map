@@ -206,83 +206,139 @@
       throw new Error("Leaflet failed to load");
     }
 
-    // Locations imported from locations.csv. Rows without coordinates still show in
-    // the list, but only rows with lat/lng can be placed on the map or distance-sorted.
-    const places = [
-      {"name":"Barefoot Char Koay Teow","type":"炒粿條","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Barefoot%20Char%20Koay%20Teow"},
-      {"name":"Hiong Hiong Char Kuey Teow","type":"炒粿條","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Hiong%20Hiong%20Char%20Kuey%20Teow"},
-      {"name":"Keat Hoe Char Koay Teow","type":"炒粿條","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Keat%20Hoe%20Char%20Koay%20Teow"},
-      {"name":"Lorong Selamat Char Koay Teow","type":"炒粿條","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Lorong%20Selamat%20Char%20Koay%20Teow"},
-      {"name":"Presgrave Street Ah Shen Duck Egg Char Koay Teow 三條路亞勝鴨蛋炒粿條","type":"炒粿條","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Presgrave%20Street%20Ah%20Shen%20Duck%20Egg%20Char%20Koay%20Teow%20%E4%B8%89%E6%A2%9D%E8%B7%AF%E4%BA%9E%E5%8B%9D%E9%B4%A8%E8%9B%8B%E7%82%92%E7%B2%BF%E6%A2%9D"},
-      {"name":"暹羅路木炭炒粿條","type":"炒粿條","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E6%9A%B9%E7%BE%85%E8%B7%AF%E6%9C%A8%E7%82%AD%E7%82%92%E7%B2%BF%E6%A2%9D"},
-      {"name":"檳城七條路850炒粿條","type":"炒粿條","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E6%AA%B3%E5%9F%8E%E4%B8%83%E6%A2%9D%E8%B7%AF850%E7%82%92%E7%B2%BF%E6%A2%9D"},
-      {"name":"興炒粿條Char Kuey Teow","type":"炒粿條","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E8%88%88%E7%82%92%E7%B2%BF%E6%A2%9D%20Char%20Kuey%20Teow"},
-      {"name":"姊妹炒粿角","type":"炒粿角","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E5%A7%8A%E5%A6%B9%E7%82%92%E7%B2%BF%E8%A7%92"},
-      {"name":"Classic Hokkien Mee","type":"福建面","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Classic%20Hokkien%20Mee"},
-      {"name":"Hokkien Mee LoR Mee","type":"福建面","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Hokkien%20Mee%20LoR%20Mee"},
-      {"name":"Oh Lay Ee Hokkien Mee","type":"福建面","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Oh%20Lay%20Ee%20Hokkien%20Mee"},
-      {"name":"Penang Hokkien Prawn Mee 槟城福建虾面/卤面","type":"福建面","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Penang%20Hokkien%20Prawn%20Mee%20%E6%A7%9F%E5%9F%8E%E7%A6%8F%E5%BB%BA%E8%99%BE%E9%9D%A2%2F%E5%8D%A4%E9%9D%A2"},
-      {"name":"T&T Prawn Mee Shop","type":"福建面","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=T%26T%20Prawn%20Mee%20Shop"},
-      {"name":"三條路888福建面","type":"福建面","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E4%B8%89%E6%A2%9D%E8%B7%AF888%E7%A6%8F%E5%BB%BA%E9%9D%A2"},
-      {"name":"正宗橋頭福建蝦麵","type":"福建面","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E6%AD%A3%E5%AE%97%E6%A9%8B%E9%A0%AD%E7%A6%8F%E5%BB%BA%E8%9D%A6%E9%BA%B5"},
-      {"name":"Dannok cafe","type":"福建面","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Dannok%20cafe"},
-      {"name":"Assam Laksa","type":"Laksa","lat":5.4037219,"lng":100.315799,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/place/Assam+Laksa/@5.4028763,100.3146799,18z/data=!4m6!3m5!1s0x304ac3cf61288119:0xf84651bd8fe0a9d5!8m2!3d5.4037219!4d100.315799!16s%2Fg%2F11ddx1l4qg?entry=ttu&g_ep=EgoyMDI2MDUwNi4wIKXMDSoASAFQAw%3D%3D"},
-      {"name":"Granny Q Lemak Laksa","type":"Laksa","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Granny%20Q%20Lemak%20Laksa"},
-      {"name":"Laksa Mamu Famous Sungai Pinang","type":"Laksa","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Laksa%20Mamu%20Famous%20Sungai%20Pinang"},
-      {"name":"Laksalicious","type":"Laksa","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Laksalicious"},
-      {"name":"Penang Air Itam Laksa","type":"Laksa","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Penang%20Air%20Itam%20Laksa"},
-      {"name":"檳榔律馳名叻沙","type":"Laksa","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E6%AA%B3%E6%A6%94%E5%BE%8B%E9%A6%B3%E5%90%8D%E5%8F%BB%E6%B2%99"},
-      {"name":"Ah Beng Lok Lok • Padang Brown","type":"Laksa","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Ah%20Beng%20Lok%20Lok%20%E2%80%A2%20Padang%20Brown"},
-      {"name":"113 Duck Meat Koey Teow Theng","type":"鴨肉粿條","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=113%20Duck%20Meat%20Koey%20Teow%20Theng"},
-      {"name":"南來鴨肉粿條湯","type":"鴨肉粿條","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E5%8D%97%E4%BE%86%E9%B4%A8%E8%82%89%E7%B2%BF%E6%A2%9D%E6%B9%AF"},
-      {"name":"Kimberley Street Duck Kway Chap","type":"鴨肉粿條","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Kimberley%20Street%20Duck%20Kway%20Chap"},
-      {"name":"Loh Duck Koay Chap","type":"鴨肉粿條","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Loh%20Duck%20Koay%20Chap"},
-      {"name":"Tong Seng Hainanese Chicken Rice","type":"Chicken Rice","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Tong%20Seng%20Hainanese%20Chicken%20Rice"},
-      {"name":"伍秀澤海南雞飯","type":"Chicken Rice","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E4%BC%8D%E7%A7%80%E6%BE%A4%E6%B5%B7%E5%8D%97%E9%9B%9E%E9%A3%AF"},
-      {"name":"Wakzee Nasi Lemak","type":"Nasi Lemak","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Wakzee%20Nasi%20Lemak"},
-      {"name":"阿里香蕉葉椰漿飯","type":"Nasi Lemak","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E9%98%BF%E9%87%8C%E9%A6%99%E8%95%89%E8%91%89%E6%A4%B0%E6%BC%BF%E9%A3%AF"},
-      {"name":"Duck Blood Curry Mee","type":"Curry Mee","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Duck%20Blood%20Curry%20Mee"},
-      {"name":"暹羅姐妹咖哩麵","type":"Curry Mee","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E6%9A%B9%E7%BE%85%E5%A7%90%E5%A6%B9%E5%92%96%E5%93%A9%E9%BA%B5"},
-      {"name":"好特波","type":"Curry Mee","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E5%A5%BD%E7%89%B9%E6%B3%A2"},
-      {"name":"How Bak Kut Teh 豪肉骨茶","type":"肉骨茶","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=How%20Bak%20Kut%20Teh%20%E8%B1%AA%20%E8%82%89%E9%AA%A8%E8%8C%B6"},
-      {"name":"焜巴生肉骨茶","type":"肉骨茶","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E7%84%9C%E5%B7%B4%E7%94%9F%E8%82%89%E9%AA%A8%E8%8C%B6"},
-      {"name":"Chulia Street Hawker Food","type":"Hawker Centre / Market","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Chulia%20Street%20Hawker%20Food"},
-      {"name":"Pasar Lebuh Cecil","type":"Hawker Centre / Market","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Pasar%20Lebuh%20Cecil"},
-      {"name":"Pulau Tikus Market Hidden Food Court","type":"Hawker Centre / Market","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Pulau%20Tikus%20Market%20Hidden%20Food%20Court"},
-      {"name":"三條路美食街","type":"Hawker Centre / Market","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E4%B8%89%E6%A2%9D%E8%B7%AF%E7%BE%8E%E9%A3%9F%E8%A1%97"},
-      {"name":"汕頭街夜市","type":"Hawker Centre / Market","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E6%B1%95%E9%A0%AD%E8%A1%97%E5%A4%9C%E5%B8%82"},
-      {"name":"紐冷街小吃街","type":"Hawker Centre / Market","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E7%B4%90%E5%86%B7%E8%A1%97%E5%B0%8F%E5%90%83%E8%A1%97"},
-      {"name":"RELAU 88","type":"茶室","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=RELAU%2088"},
-      {"name":"廣泰來茶室","type":"茶室","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E5%BB%A3%E6%B3%B0%E4%BE%86%E8%8C%B6%E5%AE%A4"},
-      {"name":"敦隆餐室","type":"茶室","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E6%95%A6%E9%9A%86%E9%A4%90%E5%AE%A4"},
-      {"name":"新國泰茶室","type":"茶室","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E6%96%B0%E5%9C%8B%E6%B3%B0%E8%8C%B6%E5%AE%A4"},
-      {"name":"瑞江茶室","type":"茶室","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E7%91%9E%E6%B1%9F%E8%8C%B6%E5%AE%A4"},
-      {"name":"金咖啡","type":"茶室","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E9%87%91%E5%92%96%E5%95%A1"},
-      {"name":"順園茶餐室","type":"茶室","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E9%A0%86%E5%9C%92%E8%8C%B6%E9%A4%90%E5%AE%A4"},
-      {"name":"Padang Brown Nyonya Kuih","type":"Dessert","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Padang%20Brown%20Nyonya%20Kuih"},
-      {"name":"娘惹食坊","type":"Dessert","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E5%A8%98%E6%83%B9%E9%A3%9F%E5%9D%8A"},
-      {"name":"莉兒娘惹糕點","type":"Dessert","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E8%8E%89%E5%85%92%E5%A8%98%E6%83%B9%E7%B3%95%E9%BB%9E"},
-      {"name":"Ban Chang Kuih Tan Hou Shen","type":"Dessert","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Ban%20Chang%20Kuih%20Tan%20Hou%20Shen"},
-      {"name":"曼煎糕","type":"Dessert","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E6%9B%BC%E7%85%8E%E7%B3%95"},
-      {"name":"四囍糖水","type":"Dessert","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E5%9B%9B%E5%9B%8D%E7%B3%96%E6%B0%B4"},
-      {"name":"Buono Gelato","type":"Dessert","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Buono%20Gelato"},
-      {"name":"Shin Shin Gelato","type":"Dessert","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=Shin%20Shin%20Gelato"},
-      {"name":"亞榮油炸粿油條西施","type":"Dessert","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E4%BA%9E%E6%A6%AE%E6%B2%B9%E7%82%B8%E7%B2%BF%20%E6%B2%B9%E6%A2%9D%E8%A5%BF%E6%96%BD"},
-      {"name":"古早味炸香蕉年糕","type":"Dessert","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E5%8F%A4%E6%97%A9%E5%91%B3%E7%82%B8%E9%A6%99%E8%95%89%E5%B9%B4%E7%B3%95"},
-      {"name":"Lunabar Coffee","type":"Coffee","lat":5.4229673,"lng":100.3244094,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/place/Lunabar+Coffee/@5.4191643,100.3258402,15z/data=!4m6!3m5!1s0x304ac39bcfeda2cf:0xc3776be3c8d430e2!8m2!3d5.4229673!4d100.3244094!16s%2Fg%2F11bxfr1lr_?entry=ttu&g_ep=EgoyMDI2MDUwNi4wIKXMDSoASAFQAw%3D%3D"},
-      {"name":"ORCABREW","type":"Coffee","lat":5.4218547,"lng":100.3266063,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/place/ORCABREW/@5.4191643,100.3258402,15z/data=!4m6!3m5!1s0x304ac30bc271a7a7:0xeefcb326499fb1a8!8m2!3d5.4218547!4d100.3266063!16s%2Fg%2F11sw6ftqfw?entry=ttu&g_ep=EgoyMDI2MDUwNi4wIKXMDSoASAFQAw%3D%3D"},
-      {"name":"Norm Micro Roastery","type":"Coffee","lat":5.4168813,"lng":100.342897,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/place/Norm+Micro+Roastery/@5.4192996,100.3268269,15.18z/data=!4m6!3m5!1s0x304ac39b6dab8a99:0x14a73529f2fc1274!8m2!3d5.4168813!4d100.342897!16s%2Fg%2F11h5mftntk?entry=ttu&g_ep=EgoyMDI2MDUwNi4wIKXMDSoASAFQAw%3D%3D"},
-      {"name":"The Alley","type":"Coffee","lat":5.4185054,"lng":100.3384157,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/place/The+Alley,+5+Stewart+Lane/@5.4192996,100.3268269,15.18z/data=!4m6!3m5!1s0x304ac38fd7748be3:0xc3f61bcab81cfde4!8m2!3d5.4185054!4d100.3384157!16s%2Fg%2F11b6bbyhjm?entry=ttu&g_ep=EgoyMDI2MDUwNi4wIKXMDSoASAFQAw%3D%3D"},
-      {"name":"Narrow Marroe","type":"Coffee","lat":5.4137967,"lng":100.3376003,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/place/Narrow+Marrow/@5.4192996,100.3268269,15.18z/data=!4m6!3m5!1s0x304ac393f15e4765:0x289b200159c1f725!8m2!3d5.4137967!4d100.3376003!16s%2Fg%2F11b7lmr4v3?entry=ttu&g_ep=EgoyMDI2MDUwNi4wIKXMDSoASAFQAw%3D%3D"},
-      {"name":"Starbright","type":"Coffee","lat":5.4126559,"lng":100.3291206,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/place/STARBRIGHT+COFFEE/@5.4180027,100.3280673,15.38z/data=!4m6!3m5!1s0x304ac3950860fb3d:0xf62dfaec6e7ab0fe!8m2!3d5.4126559!4d100.3291206!16s%2Fg%2F11fxvfv0ft?entry=ttu&g_ep=EgoyMDI2MDUwNi4wIKXMDSoASAFQAw%3D%3D"},
-      {"name":"Sweet bar","type":"Coffee","lat":5.4102037,"lng":100.3305067,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/place/Sweetbar+Cafe/@5.4180027,100.3280673,15.38z/data=!4m6!3m5!1s0x304ac324ad7ff989:0x9026a05a06bba6b5!8m2!3d5.4102037!4d100.3305067!16s%2Fg%2F11tjf57myn?entry=ttu&g_ep=EgoyMDI2MDUwNi4wIKXMDSoASAFQAw%3D%3D"},
-      {"name":"Alight","type":"Coffee","lat":5.4133506,"lng":100.333887,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/place/Alight+Coffee+(George+Town)/@5.4090695,100.327633,14.93z/data=!4m6!3m5!1s0x304ac3b2fa9fd283:0x160a29a4020f19d5!8m2!3d5.4133506!4d100.333887!16s%2Fg%2F11xtytl_xz?entry=ttu&g_ep=EgoyMDI2MDUwNi4wIKXMDSoASAFQAw%3D%3D"},
-      {"name":"義蓮鱼头米粉 Green Tomyam","type":"魚頭米粉","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E7%BE%A9%E8%93%AE%E9%B1%BC%E5%A4%B4%E7%B1%B3%E7%B2%89%20Green%20Tomyam"},
-      {"name":"鄉下魚頭米粉","type":"魚頭米粉","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E9%84%89%E4%B8%8B%E9%AD%9A%E9%A0%AD%E7%B1%B3%E7%B2%89"},
-      {"name":"雲吞面之家","type":"Wantan Mee","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E9%9B%B2%E5%90%9E%E9%9D%A2%E4%B9%8B%E5%AE%B6"},
-      {"name":"New Day Porridge","type":"Porridge","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=New%20Day%20Porridge"},
-      {"name":"富二代","type":"港點","lat":null,"lng":null,"openingHours":"","googleMapsUrl":"https://www.google.com/maps/search/?api=1&query=%E5%AF%8C%E4%BA%8C%E4%BB%A3"}
-    ];
+    let places = [];
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let value = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+
+        if (char === '"' && inQuotes && nextChar === '"') {
+          value += '"';
+          i += 1;
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === "," && !inQuotes) {
+          row.push(value);
+          value = "";
+        } else if ((char === "\n" || char === "\r") && !inQuotes) {
+          if (char === "\r" && nextChar === "\n") {
+            i += 1;
+          }
+          row.push(value);
+          if (row.some(cell => cell.trim() !== "")) {
+            rows.push(row);
+          }
+          row = [];
+          value = "";
+        } else {
+          value += char;
+        }
+      }
+
+      row.push(value);
+      if (row.some(cell => cell.trim() !== "")) {
+        rows.push(row);
+      }
+
+      return rows;
+    }
+
+    function getColumnValue(row, columnIndex, names, fallbackIndex = null) {
+      const key = names.find(name => columnIndex[name] !== undefined);
+      if (key !== undefined) {
+        return row[columnIndex[key]] || "";
+      }
+
+      return fallbackIndex === null ? "" : row[fallbackIndex] || "";
+    }
+
+    function extractCoordinatesFromGoogleMapsUrl(url) {
+      const decodedUrl = decodeURIComponent(url);
+      const exactMatch = decodedUrl.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+      const viewportMatch = decodedUrl.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),/);
+      const match = exactMatch || viewportMatch;
+
+      if (!match) {
+        return { lat: null, lng: null };
+      }
+
+      const lat = Number.parseFloat(match[1]);
+      const lng = Number.parseFloat(match[2]);
+
+      return {
+        lat: Number.isFinite(lat) ? lat : null,
+        lng: Number.isFinite(lng) ? lng : null
+      };
+    }
+
+    function csvRowsToPlaces(rows) {
+      const [headers, ...dataRows] = rows;
+      const columnIndex = Object.fromEntries(
+        headers.map((header, index) => [header.trim(), index])
+      );
+      let currentType = "";
+
+      return dataRows
+        .map(row => {
+          const type = getColumnValue(row, columnIndex, ["Food Type", "Type"], 0).trim();
+          if (type) {
+            currentType = type;
+          }
+
+          const name = getColumnValue(row, columnIndex, ["Name"], 1).trim();
+          const googleMapsUrl = getColumnValue(
+            row,
+            columnIndex,
+            ["Google Maps Link", "Google Maps URL", "Maps Link", "Link", ""],
+            2
+          ).trim();
+          const explicitLat = Number.parseFloat(getColumnValue(row, columnIndex, ["Lat", "Latitude"]).trim());
+          const explicitLng = Number.parseFloat(getColumnValue(row, columnIndex, ["Lng", "Longitude"]).trim());
+          const urlCoordinates = extractCoordinatesFromGoogleMapsUrl(googleMapsUrl);
+          const lat = Number.isFinite(explicitLat) ? explicitLat : urlCoordinates.lat;
+          const lng = Number.isFinite(explicitLng) ? explicitLng : urlCoordinates.lng;
+
+          if (!name) {
+            return null;
+          }
+
+          return {
+            name,
+            type: currentType || "Other",
+            lat: Number.isFinite(lat) ? lat : null,
+            lng: Number.isFinite(lng) ? lng : null,
+            googleMapsUrl: googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`
+          };
+        })
+        .filter(Boolean);
+    }
+
+    async function loadPlaces() {
+      status.textContent = "Loading locations...";
+
+      const response = await fetch("locations.csv");
+      if (!response.ok) {
+        throw new Error(`Could not load locations.csv (${response.status})`);
+      }
+
+      const csvText = await response.text();
+      places = csvRowsToPlaces(parseCsv(csvText));
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
 
     const defaultCenter = [5.4141, 100.3288]; // George Town, Penang
 
@@ -315,45 +371,60 @@
       iconAnchor: [9, 9]
     });
 
-    const placeIcon = L.divIcon({
-      className: "",
-      html: `
-        <div style="
-          width:22px;
-          height:22px;
-          background:#d93025;
-          border:3px solid white;
-          border-radius:50% 50% 50% 0;
-          transform:rotate(-45deg);
-          box-shadow:0 2px 8px rgba(0,0,0,.3);
-        "></div>
-      `,
-      iconSize: [22, 22],
-      iconAnchor: [11, 22]
-    });
+    function createPlaceIcon() {
+      return L.divIcon({
+        className: "",
+        html: `
+          <div style="
+            width:24px;
+            height:24px;
+            position:relative;
+          ">
+            <div style="
+              width:22px;
+              height:22px;
+              background:#d93025;
+              border:3px solid white;
+              border-radius:50% 50% 50% 0;
+              transform:rotate(-45deg);
+              transform-origin:center;
+              box-shadow:0 2px 8px rgba(0,0,0,.3);
+            "></div>
+          </div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 24],
+        popupAnchor: [0, -24]
+      });
+    }
+
+    function hasCoordinates(place) {
+      return Number.isFinite(place.lat) && Number.isFinite(place.lng);
+    }
+
+    function isPlaceVisible(place) {
+      return activeType === "All" || place.type === activeType;
+    }
 
     function renderMarkers() {
       markers.forEach(marker => map.removeLayer(marker));
       markers.length = 0;
 
-      const visiblePlaces = places.filter(place => {
-        return place.lat !== null &&
-          place.lng !== null &&
-          (activeType === "All" || place.type === activeType);
-      });
+      const visiblePlaces = places.filter(isPlaceVisible);
 
-      visiblePlaces.forEach(place => {
-        const marker = L.marker([place.lat, place.lng], { icon: placeIcon })
-          .addTo(map)
-          .bindPopup(`
-            <strong>${place.name}</strong><br>
-            ${place.type}<br>
-            ${place.openingHours}<br>
-            <a href="${place.googleMapsUrl}" target="_blank" rel="noopener">Open in Google Maps</a>
-          `);
+      visiblePlaces
+        .filter(hasCoordinates)
+        .forEach(place => {
+          const marker = L.marker([place.lat, place.lng], { icon: createPlaceIcon() })
+            .addTo(map)
+            .bindPopup(`
+              <strong>${escapeHtml(place.name)}</strong><br>
+              ${escapeHtml(place.type)}<br>
+              <a href="${escapeHtml(place.googleMapsUrl)}" target="_blank" rel="noopener">Open in Google Maps</a>
+            `);
 
-        markers.push(marker);
-      });
+          markers.push(marker);
+        });
     }
 
     function renderFilters() {
@@ -363,10 +434,14 @@
       filters.innerHTML = types.map(type => `
         <button
           class="filter-btn ${type === activeType ? "active" : ""}"
-          onclick="setFilter('${type}')">
-          ${type}
+          data-type="${escapeHtml(type)}">
+          ${escapeHtml(type)}
         </button>
       `).join("");
+
+      filters.querySelectorAll(".filter-btn").forEach(button => {
+        button.addEventListener("click", () => setFilter(button.dataset.type));
+      });
     }
 
     function setFilter(type) {
@@ -415,7 +490,7 @@
 
     function focusPlace(index) {
       const place = places[index];
-      if (place.lat === null || place.lng === null) {
+      if (!hasCoordinates(place)) {
         return;
       }
 
@@ -436,7 +511,7 @@
 
       const visiblePlaces = places
         .map((place, index) => {
-          const hasCoordinates = place.lat !== null && place.lng !== null;
+          const hasCoordinates = Number.isFinite(place.lat) && Number.isFinite(place.lng);
           const distanceMeters = userLocation && hasCoordinates
             ? getDistanceMeters(userLocation, { lat: place.lat, lng: place.lng })
             : null;
@@ -454,20 +529,25 @@
 
       list.innerHTML = visiblePlaces.map(place => `
         <section class="place-card">
-          <h2>${place.name}</h2>
+          <h2>${escapeHtml(place.name)}</h2>
 
           <div class="meta">
-            Type: ${place.type}<br>
-            ${place.openingHours ? `Opening: ${place.openingHours}<br>` : ""}
-            ${getLocationText(place)}
+            Type: ${escapeHtml(place.type)}<br>
+            ${escapeHtml(getLocationText(place))}
           </div>
 
           <div class="actions">
-            ${place.hasCoordinates ? `<button onclick="focusPlace(${place.originalIndex})">Show on map</button>` : ""}
-            <a href="${place.googleMapsUrl}" target="_blank" rel="noopener">Open in Google Maps</a>
+            ${place.hasCoordinates ? `<button type="button" data-place-index="${place.originalIndex}">Show on map</button>` : ""}
+            <a href="${escapeHtml(place.googleMapsUrl)}" target="_blank" rel="noopener">Open in Google Maps</a>
           </div>
         </section>
       `).join("");
+
+      list.querySelectorAll("[data-place-index]").forEach(button => {
+        button.addEventListener("click", () => {
+          focusPlace(Number(button.dataset.placeIndex));
+        });
+      });
     }
 
     function locateUser() {
@@ -502,7 +582,7 @@
 
           map.fitBounds(group.getBounds().pad(0.18));
         },
-        error => {
+        () => {
           status.textContent = "Location permission was denied or unavailable.";
           map.setView(defaultCenter, 13);
         },
@@ -514,11 +594,23 @@
       );
     }
 
-    renderFilters();
-    renderMarkers();
-    renderList();
-    setTimeout(() => map.invalidateSize(), 250);
-    locateUser();
+    async function init() {
+      try {
+        await loadPlaces();
+        renderFilters();
+        renderMarkers();
+        renderList();
+        const readyCount = places.filter(hasCoordinates).length;
+        status.textContent = `${readyCount} of ${places.length} map pins loaded from locations.csv.`;
+        setTimeout(() => map.invalidateSize(), 250);
+        locateUser();
+      } catch (error) {
+        console.error(error);
+        status.textContent = "Could not load locations.csv. Run this page from a local web server or check that the CSV file is next to index.html.";
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
