@@ -145,6 +145,11 @@
       margin-bottom: 10px;
     }
 
+    .popup-hours {
+      margin: 8px 0;
+      line-height: 1.45;
+    }
+
     @media (min-width: 760px) {
       .app {
         flex-direction: row;
@@ -298,6 +303,7 @@
             ["Google Maps Link", "Google Maps URL", "Maps Link", "Link", ""],
             2
           ).trim();
+          const openingHours = getColumnValue(row, columnIndex, ["Opening Hours", "Hours"], 3).trim();
           const explicitLat = Number.parseFloat(getColumnValue(row, columnIndex, ["Lat", "Latitude"]).trim());
           const explicitLng = Number.parseFloat(getColumnValue(row, columnIndex, ["Lng", "Longitude"]).trim());
           const urlCoordinates = extractCoordinatesFromGoogleMapsUrl(googleMapsUrl);
@@ -313,6 +319,7 @@
             type: currentType || "Other",
             lat: Number.isFinite(lat) ? lat : null,
             lng: Number.isFinite(lng) ? lng : null,
+            openingHours,
             googleMapsUrl: googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`
           };
         })
@@ -406,6 +413,62 @@
       return activeType === "All" || place.type === activeType;
     }
 
+    function getWeeklyHoursMap(openingHours) {
+      return Object.fromEntries(
+        openingHours
+          .split(";")
+          .map(entry => entry.trim())
+          .filter(Boolean)
+          .map(entry => {
+            const match = entry.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(.+)$/);
+            return match ? [match[1], match[2].trim()] : null;
+          })
+          .filter(Boolean)
+      );
+    }
+
+    function closesNextDay(hoursText) {
+      const match = hoursText.match(/^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/);
+      if (!match) {
+        return false;
+      }
+
+      const openMinutes = Number(match[1]) * 60 + Number(match[2]);
+      const closeMinutes = Number(match[3]) * 60 + Number(match[4]);
+      return closeMinutes <= openMinutes;
+    }
+
+    function getTodayHoursText(openingHours) {
+      if (!openingHours) {
+        return "Today: hours not available";
+      }
+
+      const dayKey = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date().getDay()];
+      const todayHours = getWeeklyHoursMap(openingHours)[dayKey] || "Unknown";
+      const nextDayNote = closesNextDay(todayHours) ? " (closes next day)" : "";
+      return `Today (${dayKey}): ${todayHours}${nextDayNote}`;
+    }
+
+    function formatFullOpeningHours(openingHours) {
+      if (!openingHours) {
+        return "Hours not available";
+      }
+
+      return openingHours
+        .split(";")
+        .map(entry => escapeHtml(entry.trim()))
+        .filter(Boolean)
+        .join("<br>");
+    }
+
+    function getPopupContent(place) {
+      return `
+        <strong>${escapeHtml(place.name)}</strong>
+        <div class="popup-hours">${formatFullOpeningHours(place.openingHours)}</div>
+        <a href="${escapeHtml(place.googleMapsUrl)}" target="_blank" rel="noopener">Open in Google Maps</a>
+      `;
+    }
+
     function renderMarkers() {
       markers.forEach(marker => map.removeLayer(marker));
       markers.length = 0;
@@ -417,11 +480,7 @@
         .forEach(place => {
           const marker = L.marker([place.lat, place.lng], { icon: createPlaceIcon() })
             .addTo(map)
-            .bindPopup(`
-              <strong>${escapeHtml(place.name)}</strong><br>
-              ${escapeHtml(place.type)}<br>
-              <a href="${escapeHtml(place.googleMapsUrl)}" target="_blank" rel="noopener">Open in Google Maps</a>
-            `);
+            .bindPopup(getPopupContent(place));
 
           markers.push(marker);
         });
@@ -532,7 +591,7 @@
           <h2>${escapeHtml(place.name)}</h2>
 
           <div class="meta">
-            Type: ${escapeHtml(place.type)}<br>
+            ${escapeHtml(getTodayHoursText(place.openingHours))}<br>
             ${escapeHtml(getLocationText(place))}
           </div>
 
