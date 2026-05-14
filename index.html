@@ -378,7 +378,7 @@
       iconAnchor: [9, 9]
     });
 
-    function createPlaceIcon() {
+    function createPlaceIcon(isClosedToday = false) {
       return L.divIcon({
         className: "",
         html: `
@@ -396,6 +396,7 @@
               transform:rotate(-45deg);
               transform-origin:center;
               box-shadow:0 2px 8px rgba(0,0,0,.3);
+              opacity:${isClosedToday ? ".35" : "1"};
             "></div>
           </div>
         `,
@@ -411,6 +412,19 @@
 
     function isPlaceVisible(place) {
       return activeType === "All" || place.type === activeType;
+    }
+
+    function getTodayHours(openingHours) {
+      if (!openingHours) {
+        return "";
+      }
+
+      const dayKey = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date().getDay()];
+      return getWeeklyHoursMap(openingHours)[dayKey] || "Unknown";
+    }
+
+    function isClosedToday(place) {
+      return getTodayHours(place.openingHours) === "Closed";
     }
 
     function getWeeklyHoursMap(openingHours) {
@@ -444,7 +458,7 @@
       }
 
       const dayKey = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date().getDay()];
-      const todayHours = getWeeklyHoursMap(openingHours)[dayKey] || "Unknown";
+      const todayHours = getTodayHours(openingHours);
       const nextDayNote = closesNextDay(todayHours) ? " (closes next day)" : "";
       return `Today (${dayKey}): ${todayHours}${nextDayNote}`;
     }
@@ -478,7 +492,7 @@
       visiblePlaces
         .filter(hasCoordinates)
         .forEach(place => {
-          const marker = L.marker([place.lat, place.lng], { icon: createPlaceIcon() })
+          const marker = L.marker([place.lat, place.lng], { icon: createPlaceIcon(isClosedToday(place)) })
             .addTo(map)
             .bindPopup(getPopupContent(place));
 
