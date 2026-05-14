@@ -42,7 +42,15 @@
       height: 100dvh;
       display: flex;
       flex-direction: column;
+    }
+
+    .map-shell {
       position: relative;
+      height: 52vh;
+      height: 52dvh;
+      min-height: 320px;
+      width: 100%;
+      flex-shrink: 0;
     }
 
     .list-toggle {
@@ -81,13 +89,11 @@
     }
 
     #map {
-      height: 52vh;
-      height: 52dvh;
-      min-height: 320px;
+      height: 100%;
       width: 100%;
     }
 
-    .app.list-hidden #map {
+    .app.list-hidden .map-shell {
       height: 100vh;
       height: 100dvh;
     }
@@ -181,13 +187,13 @@
         flex-direction: row;
       }
 
-      #map {
+      .map-shell {
         height: 100vh;
         height: 100dvh;
         width: 60%;
       }
 
-      .app.list-hidden #map {
+      .app.list-hidden .map-shell {
         width: 100%;
       }
 
@@ -212,11 +218,13 @@
 
 <body>
   <div class="app" id="app">
-    <button class="list-toggle" id="listToggle" type="button" aria-expanded="true" aria-controls="sidePanel">
-      Hide list
-    </button>
+    <div class="map-shell">
+      <button class="list-toggle" id="listToggle" type="button" aria-expanded="true" aria-controls="sidePanel">
+        Hide list
+      </button>
 
-    <div id="map"></div>
+      <div id="map"></div>
+    </div>
 
     <div class="side" id="sidePanel">
       <header>
