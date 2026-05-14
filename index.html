@@ -42,6 +42,23 @@
       height: 100dvh;
       display: flex;
       flex-direction: column;
+      position: relative;
+    }
+
+    .list-toggle {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 500;
+      border: 1px solid rgba(0, 0, 0, .14);
+      border-radius: 8px;
+      padding: 9px 12px;
+      background: #fff;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, .18);
+      cursor: pointer;
     }
 
     header {
@@ -68,6 +85,15 @@
       height: 52dvh;
       min-height: 320px;
       width: 100%;
+    }
+
+    .app.list-hidden #map {
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    .app.list-hidden .side {
+      display: none;
     }
 
     .panel {
@@ -161,6 +187,10 @@
         width: 60%;
       }
 
+      .app.list-hidden #map {
+        width: 100%;
+      }
+
       .side {
         width: 40%;
         height: 100vh;
@@ -181,10 +211,14 @@
 </head>
 
 <body>
-  <div class="app">
+  <div class="app" id="app">
+    <button class="list-toggle" id="listToggle" type="button" aria-expanded="true" aria-controls="sidePanel">
+      Hide list
+    </button>
+
     <div id="map"></div>
 
-    <div class="side">
+    <div class="side" id="sidePanel">
       <header>
         <h1>Penang Food Map</h1>
       </header>
@@ -361,6 +395,18 @@
     const markers = [];
     let activeType = "All";
     let userLocation = null;
+
+    function setupListToggle() {
+      const app = document.getElementById("app");
+      const toggle = document.getElementById("listToggle");
+
+      toggle.addEventListener("click", () => {
+        const isHidden = app.classList.toggle("list-hidden");
+        toggle.textContent = isHidden ? "Show list" : "Hide list";
+        toggle.setAttribute("aria-expanded", String(!isHidden));
+        setTimeout(() => map.invalidateSize(), 250);
+      });
+    }
 
     const userIcon = L.divIcon({
       className: "",
@@ -673,6 +719,7 @@
         renderFilters();
         renderMarkers();
         renderList();
+        setupListToggle();
         const readyCount = places.filter(hasCoordinates).length;
         status.textContent = `${readyCount} of ${places.length} map pins loaded from locations.csv.`;
         setTimeout(() => map.invalidateSize(), 250);
