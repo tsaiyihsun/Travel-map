@@ -432,7 +432,11 @@
       iconAnchor: [9, 9]
     });
 
-    function createPlaceIcon(isClosedToday = false) {
+    function createPlaceIcon(state = "open") {
+      const isClosed = state === "closedToday" || state === "afterHours";
+      const opacity = state === "opensLater" ? ".5" : isClosed ? ".4" : "1";
+      const color = isClosed ? "#1a73e8" : "#d93025";
+
       return L.divIcon({
         className: "",
         html: `
@@ -444,13 +448,13 @@
             <div style="
               width:22px;
               height:22px;
-              background:#d93025;
+              background:${color};
               border:3px solid white;
               border-radius:50% 50% 50% 0;
               transform:rotate(-45deg);
               transform-origin:center;
               box-shadow:0 2px 8px rgba(0,0,0,.3);
-              opacity:${isClosedToday ? ".35" : "1"};
+              opacity:${opacity};
             "></div>
           </div>
         `,
@@ -477,10 +481,6 @@
       return getWeeklyHoursMap(openingHours)[dayKey] || "Unknown";
     }
 
-    function isClosedToday(place) {
-      return getTodayHours(place.openingHours) === "Closed";
-    }
-
     function getWeeklyHoursMap(openingHours) {
       return Object.fromEntries(
         openingHours
@@ -495,15 +495,69 @@
       );
     }
 
-    function closesNextDay(hoursText) {
-      const match = hoursText.match(/^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/);
+    function getMinutes(time) {
+      const match = time.match(/^(\d{2}):(\d{2})$/);
       if (!match) {
-        return false;
+        return null;
       }
 
-      const openMinutes = Number(match[1]) * 60 + Number(match[2]);
-      const closeMinutes = Number(match[3]) * 60 + Number(match[4]);
-      return closeMinutes <= openMinutes;
+      return Number(match[1]) * 60 + Number(match[2]);
+    }
+
+    function getTimeRanges(hoursText) {
+      return hoursText
+        .split(",")
+        .map(range => range.trim().match(/^(\d{2}:\d{2})-(\d{2}:\d{2})$/))
+        .filter(Boolean)
+        .map(match => {
+          const start = getMinutes(match[1]);
+          const end = getMinutes(match[2]);
+          return start === null || end === null ? null : {
+            start,
+            end,
+            startText: match[1],
+            endText: match[2],
+            closesNextDay: end <= start
+          };
+        })
+        .filter(Boolean);
+    }
+
+    function getOpeningState(openingHours) {
+      const todayHours = getTodayHours(openingHours);
+      if (!openingHours || todayHours === "Unknown") {
+        return { state: "unknown", label: "Hours not available" };
+      }
+
+      if (todayHours === "Closed") {
+        return { state: "closedToday", label: "Closed today" };
+      }
+
+      const now = new Date();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const ranges = getTimeRanges(todayHours);
+      const activeRange = ranges.find(range => {
+        return range.closesNextDay
+          ? nowMinutes >= range.start || nowMinutes < range.end
+          : nowMinutes >= range.start && nowMinutes < range.end;
+      });
+
+      if (activeRange) {
+        return {
+          state: "open",
+          label: `Open now, closes at ${activeRange.endText}${activeRange.closesNextDay ? " next day" : ""}`
+        };
+      }
+
+      const nextRange = ranges
+        .filter(range => nowMinutes < range.start)
+        .sort((a, b) => a.start - b.start)[0];
+
+      if (nextRange) {
+        return { state: "opensLater", label: `Opens at ${nextRange.startText}` };
+      }
+
+      return { state: "afterHours", label: "Closed now" };
     }
 
     function getTodayHoursText(openingHours) {
@@ -513,7 +567,7 @@
 
       const dayKey = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date().getDay()];
       const todayHours = getTodayHours(openingHours);
-      const nextDayNote = closesNextDay(todayHours) ? " (closes next day)" : "";
+      const nextDayNote = getTimeRanges(todayHours).some(range => range.closesNextDay) ? " (closes next day)" : "";
       return `Today (${dayKey}): ${todayHours}${nextDayNote}`;
     }
 
@@ -546,7 +600,7 @@
       visiblePlaces
         .filter(hasCoordinates)
         .forEach(place => {
-          const marker = L.marker([place.lat, place.lng], { icon: createPlaceIcon(isClosedToday(place)) })
+          const marker = L.marker([place.lat, place.lng], { icon: createPlaceIcon(getOpeningState(place.openingHours).state) })
             .addTo(map)
             .bindPopup(getPopupContent(place));
 
@@ -660,6 +714,7 @@
 
           <div class="meta">
             ${escapeHtml(getTodayHoursText(place.openingHours))}<br>
+            ${escapeHtml(getOpeningState(place.openingHours).label)}<br>
             ${escapeHtml(getLocationText(place))}
           </div>
 
